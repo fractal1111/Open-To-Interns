@@ -1,6 +1,4 @@
 const collegeModel = require("../models/collegeModel")
-
-
 const internsModel = require("../models/internModel")
 
 
@@ -19,16 +17,24 @@ const createCollege = async function (req, res) {
 
         const { name, fullName, logoLink } = data
 
-        if (Object.keys(data) == 0) return res.status(400).send({ status: false, msg: "No input provided" })
+        if (Object.keys(data) == 0) return res.status(400).send({ status: false, Error: "Body is empty. No input provided. Please provide input" })
 
-        if (!name) return res.status(400).send({ status: false, msg: "name is required" })
-        if (!fullName) return res.status(400).send({ status: false, msg: "fullName is required" })
-        if (!logoLink) return res.status(400).send({ status: false, msg: "logoLink is required" })
+        if (!name) { return res.status(400).send({ status: false, ERROR: "Name is required. Plese provide the name field and enter the correct abbreviation." }) }
+        if (!fullName) { return res.status(400).send({ status: false, ERROR: "fullName is required. Please provide the fullName field and enter the correct name of the college." }) }
+        if (!logoLink) { return res.status(400).send({ status: false, ERROR: "logoLink is required. Please provide the logoLink field and enter logo link." }) }
+
+        let dupliName = await collegeModel.find({ name: name })
+        if (dupliName.length > 0) { return res.status(400).send({ Status: false, ERROR: "College with this name abbreviation already exists." }) }
+
+        let dupliFullName = await collegeModel.find({ fullName: fullName })
+        if (dupliFullName.length > 0) { return res.status(400).send({ Status: false, ERROR: "College with this full name already exists." }) }
+
+
 
         let collegeCreated = await collegeModel.create(data)
-        res.status(201).send({ status: true, msg: "College Created Successfuly ", data: collegeCreated })
+        res.status(201).send({ status: true, msg: "College Created Successfuly. ", data: collegeCreated })
     } catch (error) {
-        res.status(500).send({ status: false, msg: error.message })
+        res.status(500).send({ status: false, ERROR: error.message })
     }
 
 
@@ -45,17 +51,17 @@ const createIntern = async function (req, res) {
 
         let data = req.body
         const { name, collegeName, email, mobile } = data
-        console.log(collegeName)
+
 
         if (Object.keys(data) != 0) {
 
 
-            if (!(name)) { return res.status(400).send({ Status: false, ERROR: "Please provide complete name of the intern  " }) }
+            if (!(name)) { return res.status(400).send({ Status: false, ERROR: "Please provide the name field and enter the complete name of the intern." }) }
 
-            if (!(collegeName)) { return res.staus(400).send({ Status: false, ERROR: "Please provide the  college name abbreviation" }) }
+            if (!(collegeName)) { return res.staus(400).send({ Status: false, ERROR: "Please provide the collegeName field and enter the correct abbreviation of the respected College name." }) }
 
-            if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(email))) { return res.status(400).send({ status: false, ERROR: "Please provide a valid email" }) }
-            if (!(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/.test(mobile))) { return res.status(400).send({ Status: false, ERROR: "Please provide a valid 10 digit mobile number" }) }
+            if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(email))) { return res.status(400).send({ status: false, ERROR: "Please provide the email field and enter a valid email address." }) }
+            if (!(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/.test(mobile))) { return res.status(400).send({ Status: false, ERROR: "Please provide the mobile field and enter a valid 10 digit mobile number" }) }
 
 
             let dupliEmail = await internsModel.find({ email: email })
@@ -94,17 +100,17 @@ const getDetails = async function (req, res) {
 
 
         let collegeName = req.query.collegeName
-        if (!collegeName) { return res.status(400).send({ Status: false, ERROR: "Please provide collegeName in query" }) }
+        if (!collegeName) { return res.status(400).send({ Status: false, ERROR: "Please provide the collegeName(abbreviation of the full name of the respected college) in query." }) }
 
         let requestedCollege = await collegeModel.findOne({ name: collegeName })
-        
-        if (!requestedCollege) { return res.status(404).send({ Status: false, ERROR: "No college found" }) }
+
+        if (!requestedCollege) { return res.status(404).send({ Status: false, ERROR: "No college with this abbreviation was found" }) }
 
         let availableInterns = await internsModel.find({ collegeId: requestedCollege._id })
-       
+
 
         let result = { name: requestedCollege.name, fullName: requestedCollege.fullName, logoLink: requestedCollege.logoLink }
-        
+
 
         if (availableInterns.length > 0) {
             result["Iterests"] = availableInterns
@@ -114,7 +120,7 @@ const getDetails = async function (req, res) {
         }
 
         if (availableInterns.length == 0) {
-            result["Iterests"] = "No Interns For Now"
+            result["Iterests"] = "No interns are available for the respected college."
 
             return res.status(200).send({ Data: result })
 
