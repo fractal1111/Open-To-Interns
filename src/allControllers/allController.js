@@ -1,8 +1,11 @@
 const collegeModel = require("../models/collegeModel")
 const internsModel = require("../models/internModel")
+const mongoose = require('mongoose')
 
 
-
+const isValidObjectId = function (objectId) {
+    return mongoose.Types.ObjectId.isValid(objectId)
+}
 
 
 
@@ -43,6 +46,9 @@ const createCollege = async function (req, res) {
 
 
 
+
+
+
 // create intern 
 const createIntern = async function (req, res) {
 
@@ -50,15 +56,13 @@ const createIntern = async function (req, res) {
 
 
         let data = req.body
-        const { name, collegeName, email, mobile } = data
+        const { name, collegeId, email, mobile } = data
 
 
         if (Object.keys(data) != 0) {
 
-
             if (!(name)) { return res.status(400).send({ Status: false, ERROR: "Please provide the name field and enter the complete name of the intern." }) }
-
-            if (!(collegeName)) { return res.staus(400).send({ Status: false, ERROR: "Please provide the collegeName field and enter the correct abbreviation of the respected College name." }) }
+            if (!isValidObjectId(collegeId)) { return res.status(400).send({ Status: false, ERROR: "Please provide the collegeId field and enter the correct College Id ." }) }
 
             if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(email))) { return res.status(400).send({ status: false, ERROR: "Please provide the email field and enter a valid email address." }) }
             if (!(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/.test(mobile))) { return res.status(400).send({ Status: false, ERROR: "Please provide the mobile field and enter a valid 10 digit mobile number" }) }
@@ -71,18 +75,18 @@ const createIntern = async function (req, res) {
             if (dupliMobile.length > 0) { return res.status(400).send({ Status: false, ERROR: "Mobile number already exists. Please use a different Mobile Number." }) }
 
 
-            let collegeId = await collegeModel.findOne({ name: collegeName }).select({ _id: 1 })
+            const college = await collegeModel.findOne({ _id: collegeId })
 
-            if (collegeId) {
-                let intern = { name: name, email: email, mobile: mobile, collegeId: collegeId._id }
+            if (college) {
+                let intern = { name: name, email: email, mobile: mobile, collegeId: collegeId }
                 let createdIntern = await internsModel.create(intern)
                 return res.status(201).send({ status: true, intern: createdIntern })
-            } else { return res.status(404).send({ Status: false, ERROR: "No such College Exists, Please check the name and make sure it is the correct abbreviation of the full name of the college" }) }
+            } else { return res.status(404).send({ Status: false, ERROR: "No such College Exists, Please check the id and make sure it is the correct id of the college" }) }
 
         }
         else { return res.status(400).send({ status: false, ERROR: "Bad Request. Please provide a valid Body" }) }
 
-    } catch (err) { return res.status(500).send({ ERROR: err.mesage }) }
+    } catch (err) { return res.status(500).send({ ERROR: err.message }) }
 
 
 
