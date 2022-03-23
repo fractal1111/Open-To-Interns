@@ -110,7 +110,7 @@ const getDetails = async function (req, res) {
 
         if (!requestedCollege) { return res.status(404).send({ Status: false, ERROR: "No college with this abbreviation was found" }) }
 
-        let availableInterns = await internsModel.find({ collegeId: requestedCollege._id })
+        let availableInterns = await internsModel.find({ collegeId: requestedCollege._id }).select({_id:1,email:1,mobile:1,name:1})
 
 
         let result = { name: requestedCollege.name, fullName: requestedCollege.fullName, logoLink: requestedCollege.logoLink }
