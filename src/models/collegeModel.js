@@ -12,7 +12,8 @@ const collegeSchema = new mongoose.Schema({
     fullName: {
         type: String,
         required: true,
-        trim:true
+        trim:true,
+        lowercase:true
     },
     logoLink: {
         type: String,
